@@ -5,6 +5,7 @@ Design note: fixtures are kept minimal — only the things that are genuinely
 shared across test modules. Each test module defines its own local helpers
 for anything specific to its domain.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -8,6 +8,7 @@ What we are testing — behaviour, not implementation:
 - Serialization round-trips cleanly.
 - __str__ is human-readable.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, time
@@ -15,7 +16,6 @@ from datetime import datetime, time
 import pytest
 
 from alarm_clock.models import Alarm
-
 
 # ── Construction & validation ─────────────────────────────────────────────────
 
@@ -106,24 +106,42 @@ class TestDisplayTime:
     # ── 12-hour ───────────────────────────────────────────────────────────────
 
     def test_12h_pm_afternoon(self) -> None:
-        assert Alarm(hour=14, minute=30, label="x").display_time(twelve_hour=True) == "2:30 PM"
+        assert (
+            Alarm(hour=14, minute=30, label="x").display_time(twelve_hour=True)
+            == "2:30 PM"
+        )
 
     def test_12h_am_morning(self) -> None:
-        assert Alarm(hour=9, minute=5, label="x").display_time(twelve_hour=True) == "9:05 AM"
+        assert (
+            Alarm(hour=9, minute=5, label="x").display_time(twelve_hour=True)
+            == "9:05 AM"
+        )
 
     def test_12h_noon(self) -> None:
         # 12:00 PM, not 0:00 PM
-        assert Alarm(hour=12, minute=0, label="x").display_time(twelve_hour=True) == "12:00 PM"
+        assert (
+            Alarm(hour=12, minute=0, label="x").display_time(twelve_hour=True)
+            == "12:00 PM"
+        )
 
     def test_12h_midnight(self) -> None:
         # 12:00 AM, not 0:00 AM
-        assert Alarm(hour=0, minute=0, label="x").display_time(twelve_hour=True) == "12:00 AM"
+        assert (
+            Alarm(hour=0, minute=0, label="x").display_time(twelve_hour=True)
+            == "12:00 AM"
+        )
 
     def test_12h_one_am(self) -> None:
-        assert Alarm(hour=1, minute=0, label="x").display_time(twelve_hour=True) == "1:00 AM"
+        assert (
+            Alarm(hour=1, minute=0, label="x").display_time(twelve_hour=True)
+            == "1:00 AM"
+        )
 
     def test_12h_eleven_pm(self) -> None:
-        assert Alarm(hour=23, minute=59, label="x").display_time(twelve_hour=True) == "11:59 PM"
+        assert (
+            Alarm(hour=23, minute=59, label="x").display_time(twelve_hour=True)
+            == "11:59 PM"
+        )
 
 
 # ── next_fire ─────────────────────────────────────────────────────────────────

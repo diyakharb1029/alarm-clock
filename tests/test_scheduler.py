@@ -15,24 +15,23 @@ run_scheduler has an infinite loop. We test it by injecting a fake clock that
 raises StopIteration after N ticks — the test catches StopIteration and inspects
 the side effects. No threading, no patching, no freezegun required.
 """
+
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import datetime
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
 from alarm_clock.models import Alarm
 from alarm_clock.scheduler import (
     FIRE_WINDOW_SECONDS,
-    ClockProtocol,
     _on_fired,
     run_scheduler,
     should_fire,
 )
 from alarm_clock.storage import Storage
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -119,9 +118,7 @@ class TestShouldFire:
 
 
 class TestOnFired:
-    def test_one_time_alarm_is_disabled_after_firing(
-        self, tmp_path: Path
-    ) -> None:
+    def test_one_time_alarm_is_disabled_after_firing(self, tmp_path: Path) -> None:
         storage = Storage(path=tmp_path / "alarms.json")
         alarm = Alarm(id="onetime1", hour=8, minute=0, label="x", recurring=False)
         storage.add(alarm)
@@ -132,13 +129,9 @@ class TestOnFired:
         assert reloaded is not None
         assert reloaded.enabled is False
 
-    def test_recurring_alarm_stays_enabled_after_firing(
-        self, tmp_path: Path
-    ) -> None:
+    def test_recurring_alarm_stays_enabled_after_firing(self, tmp_path: Path) -> None:
         storage = Storage(path=tmp_path / "alarms.json")
-        alarm = Alarm(
-            id="recur001", hour=8, minute=0, label="x", recurring=True
-        )
+        alarm = Alarm(id="recur001", hour=8, minute=0, label="x", recurring=True)
         storage.add(alarm)
 
         _on_fired(alarm, storage)
@@ -177,45 +170,43 @@ class TestRunScheduler:
 
         assert notifier.fired == []
 
-    def test_does_not_fire_same_alarm_twice_in_one_minute(
-        self, tmp_path: Path
-    ) -> None:
+    def test_does_not_fire_same_alarm_twice_in_one_minute(self, tmp_path: Path) -> None:
         storage = Storage(path=tmp_path / "alarms.json")
         alarm = Alarm(id="dedup001", hour=9, minute=0, label="x")
         storage.add(alarm)
 
         notifier = RecordingNotifier()
         # Two ticks in the same minute
-        clock = ControlledClock([
-            datetime(2024, 1, 15, 9, 0, 0),
-            datetime(2024, 1, 15, 9, 0, 30),
-        ])
+        clock = ControlledClock(
+            [
+                datetime(2024, 1, 15, 9, 0, 0),
+                datetime(2024, 1, 15, 9, 0, 30),
+            ]
+        )
 
         run_scheduler(storage=storage, notifier=notifier, clock=clock)
 
         assert len(notifier.fired) == 1
 
-    def test_fires_alarm_on_second_tick_of_same_minute(
-        self, tmp_path: Path
-    ) -> None:
+    def test_fires_alarm_on_second_tick_of_same_minute(self, tmp_path: Path) -> None:
         """Alarm missed on first tick (just before window) fires on second tick."""
         storage = Storage(path=tmp_path / "alarms.json")
         alarm = Alarm(id="tick0001", hour=9, minute=0, label="x")
         storage.add(alarm)
 
         notifier = RecordingNotifier()
-        clock = ControlledClock([
-            datetime(2024, 1, 15, 8, 59, 45),  # too early
-            datetime(2024, 1, 15, 9, 0, 5),    # in window
-        ])
+        clock = ControlledClock(
+            [
+                datetime(2024, 1, 15, 8, 59, 45),  # too early
+                datetime(2024, 1, 15, 9, 0, 5),  # in window
+            ]
+        )
 
         run_scheduler(storage=storage, notifier=notifier, clock=clock)
 
         assert len(notifier.fired) == 1
 
-    def test_disables_one_time_alarm_after_firing(
-        self, tmp_path: Path
-    ) -> None:
+    def test_disables_one_time_alarm_after_firing(self, tmp_path: Path) -> None:
         storage = Storage(path=tmp_path / "alarms.json")
         alarm = Alarm(id="ot000001", hour=9, minute=0, label="x", recurring=False)
         storage.add(alarm)
@@ -229,13 +220,9 @@ class TestRunScheduler:
         assert reloaded is not None
         assert reloaded.enabled is False
 
-    def test_recurring_alarm_stays_enabled_after_firing(
-        self, tmp_path: Path
-    ) -> None:
+    def test_recurring_alarm_stays_enabled_after_firing(self, tmp_path: Path) -> None:
         storage = Storage(path=tmp_path / "alarms.json")
-        alarm = Alarm(
-            id="rec00001", hour=9, minute=0, label="x", recurring=True
-        )
+        alarm = Alarm(id="rec00001", hour=9, minute=0, label="x", recurring=True)
         storage.add(alarm)
 
         notifier = RecordingNotifier()
@@ -257,9 +244,7 @@ class TestRunScheduler:
 
         assert notifier.fired == []
 
-    def test_poll_interval_equal_to_fire_window_raises(
-        self, tmp_path: Path
-    ) -> None:
+    def test_poll_interval_equal_to_fire_window_raises(self, tmp_path: Path) -> None:
         """
         poll_interval == FIRE_WINDOW_SECONDS means alarms firing between polls
         fall outside the window on the next poll and are silently skipped.
@@ -274,9 +259,7 @@ class TestRunScheduler:
                 poll_interval=FIRE_WINDOW_SECONDS,
             )
 
-    def test_poll_interval_above_fire_window_raises(
-        self, tmp_path: Path
-    ) -> None:
+    def test_poll_interval_above_fire_window_raises(self, tmp_path: Path) -> None:
         storage = Storage(path=tmp_path / "alarms.json")
         notifier = RecordingNotifier()
         with pytest.raises(ValueError, match="poll_interval"):

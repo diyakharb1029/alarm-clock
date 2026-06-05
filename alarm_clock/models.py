@@ -22,6 +22,7 @@ Design decisions
    UUID is hostile to keyboard input. 8 hex characters gives 4 billion unique IDs,
    which is sufficient for a local alarm store.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -147,7 +148,7 @@ class Alarm:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Alarm":
+    def from_dict(cls, data: dict[str, Any]) -> Alarm:
         """
         Deserialize from a dictionary (e.g., loaded from JSON).
 

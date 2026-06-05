@@ -23,19 +23,19 @@ Design decisions
    Reason: "invalid time" is useless. Telling the user what we accept helps
    them fix the problem without consulting documentation.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, time
 
-
 # Formats attempted in order. More specific (and more commonly used) first.
 _FORMATS: list[str] = [
     "%I:%M %p",  # 2:30 PM  / 02:30 PM
-    "%I:%M%p",   # 2:30PM   / 02:30PM
+    "%I:%M%p",  # 2:30PM   / 02:30PM
     "%H:%M:%S",  # 14:30:00 (seconds accepted but discarded)
-    "%H:%M",     # 14:30
-    "%I %p",     # 2 PM
-    "%I%p",      # 2PM
+    "%H:%M",  # 14:30
+    "%I %p",  # 2 PM
+    "%I%p",  # 2PM
 ]
 
 

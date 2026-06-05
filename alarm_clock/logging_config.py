@@ -18,6 +18,7 @@ Design decisions
    Reason: a never-rotating log file on a long-running machine would grow
    unboundedly. 1 MB × 4 files ≈ 4 MB maximum disk usage, which is negligible.
 """
+
 from __future__ import annotations
 
 import logging
@@ -27,7 +28,7 @@ from pathlib import Path
 _LOG_DIR = Path.home() / ".alarm_clock"
 _LOG_FILE = _LOG_DIR / "alarm.log"
 _MAX_BYTES = 1 * 1024 * 1024  # 1 MB per file
-_BACKUP_COUNT = 3              # Keep alarm.log, alarm.log.1, alarm.log.2, alarm.log.3
+_BACKUP_COUNT = 3  # Keep alarm.log, alarm.log.1, alarm.log.2, alarm.log.3
 
 
 def configure_logging(verbose: bool = False) -> None:

@@ -12,13 +12,13 @@ SoundNotifier is excluded from automated tests: it calls platform-specific
 system commands (afplay, aplay, winsound) that require audio hardware and
 a real OS audio stack. It is tested manually on each supported platform.
 """
+
 from __future__ import annotations
 
 import pytest
 
 from alarm_clock.models import Alarm
 from alarm_clock.notifier import CompositeNotifier, TerminalNotifier
-
 
 # ── TerminalNotifier ──────────────────────────────────────────────────────────
 
@@ -28,20 +28,26 @@ class TestTerminalNotifier:
     def alarm(self) -> Alarm:
         return Alarm(id="notif001", hour=14, minute=30, label="Review")
 
-    def test_notify_prints_label(self, alarm: Alarm, capsys: pytest.CaptureFixture) -> None:  # type: ignore[type-arg]
+    def test_notify_prints_label(
+        self, alarm: Alarm, capsys: pytest.CaptureFixture
+    ) -> None:  # type: ignore[type-arg]
         TerminalNotifier().notify(alarm)
         out = capsys.readouterr().out
         assert "Review" in out
 
     def test_notify_24h_shows_scheduled_time(
-        self, alarm: Alarm, capsys: pytest.CaptureFixture  # type: ignore[type-arg]
+        self,
+        alarm: Alarm,
+        capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
     ) -> None:
         TerminalNotifier(twelve_hour=False).notify(alarm)
         out = capsys.readouterr().out
         assert "14:30" in out
 
     def test_notify_12h_shows_pm_in_scheduled_time(
-        self, alarm: Alarm, capsys: pytest.CaptureFixture  # type: ignore[type-arg]
+        self,
+        alarm: Alarm,
+        capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
     ) -> None:
         # Proves the scheduled time uses 12h format — "2:30 PM" not "14:30"
         TerminalNotifier(twelve_hour=True).notify(alarm)
@@ -50,7 +56,9 @@ class TestTerminalNotifier:
         assert "14:30" not in out
 
     def test_notify_12h_shows_pm_in_fired_time(
-        self, alarm: Alarm, capsys: pytest.CaptureFixture  # type: ignore[type-arg]
+        self,
+        alarm: Alarm,
+        capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
     ) -> None:
         # Proves the fired-at time also uses 12h format.
         # This test would have caught the %-I platform bug:
@@ -62,7 +70,9 @@ class TestTerminalNotifier:
         assert "AM" in out or "PM" in out
 
     def test_notify_default_is_24h(
-        self, alarm: Alarm, capsys: pytest.CaptureFixture  # type: ignore[type-arg]
+        self,
+        alarm: Alarm,
+        capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
     ) -> None:
         TerminalNotifier().notify(alarm)
         out = capsys.readouterr().out
@@ -71,7 +81,8 @@ class TestTerminalNotifier:
         assert " PM" not in out
 
     def test_notify_recurring_shows_type(
-        self, capsys: pytest.CaptureFixture  # type: ignore[type-arg]
+        self,
+        capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
     ) -> None:
         alarm = Alarm(hour=7, minute=0, label="Standup", recurring=True)
         TerminalNotifier().notify(alarm)
@@ -79,7 +90,9 @@ class TestTerminalNotifier:
         assert "recurring" in out.lower()
 
     def test_notify_shows_snooze_hint(
-        self, alarm: Alarm, capsys: pytest.CaptureFixture  # type: ignore[type-arg]
+        self,
+        alarm: Alarm,
+        capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
     ) -> None:
         TerminalNotifier().notify(alarm)
         out = capsys.readouterr().out
@@ -87,7 +100,8 @@ class TestTerminalNotifier:
         assert alarm.id in out
 
     def test_notify_midnight_12h(
-        self, capsys: pytest.CaptureFixture  # type: ignore[type-arg]
+        self,
+        capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
     ) -> None:
         alarm = Alarm(hour=0, minute=0, label="Midnight")
         TerminalNotifier(twelve_hour=True).notify(alarm)
@@ -96,7 +110,8 @@ class TestTerminalNotifier:
         assert "12:00 AM" in out
 
     def test_notify_noon_12h(
-        self, capsys: pytest.CaptureFixture  # type: ignore[type-arg]
+        self,
+        capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
     ) -> None:
         alarm = Alarm(hour=12, minute=0, label="Noon")
         TerminalNotifier(twelve_hour=True).notify(alarm)

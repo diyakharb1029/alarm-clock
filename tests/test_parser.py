@@ -11,6 +11,7 @@ What we are testing — behaviour:
 - Sub-minute precision is discarded (seconds are stripped).
 - Whitespace around the input is tolerated.
 """
+
 from __future__ import annotations
 
 from datetime import time
@@ -18,7 +19,6 @@ from datetime import time
 import pytest
 
 from alarm_clock.parser import parse_time
-
 
 # ── Happy-path: 24-hour formats ───────────────────────────────────────────────
 

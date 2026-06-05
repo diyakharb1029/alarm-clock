@@ -27,6 +27,7 @@ Design decisions
    does not appear as garbage in piped output. This follows the Unix convention
    that stdout carries data and stderr carries signals.
 """
+
 from __future__ import annotations
 
 import logging
@@ -94,7 +95,10 @@ class TerminalNotifier:
         if alarm.recurring:
             print("  Type: recurring (daily)", flush=True)
         if alarm.snooze_minutes:
-            print(f"  Snooze: {alarm.snooze_minutes} min  (`alarm snooze {alarm.id}`)", flush=True)
+            print(
+                f"  Snooze: {alarm.snooze_minutes} min  (`alarm snooze {alarm.id}`)",
+                flush=True,
+            )
         print(f"{border}\n", flush=True)
         # Bell to stderr — does not corrupt piped stdout
         print("\a", end="", flush=True, file=sys.stderr)
@@ -112,9 +116,7 @@ class SoundNotifier:
         try:
             if system == "Darwin":
                 # afplay is available on all macOS installs
-                os.system(
-                    "afplay /System/Library/Sounds/Glass.aiff 2>/dev/null"
-                )
+                os.system("afplay /System/Library/Sounds/Glass.aiff 2>/dev/null")
             elif system == "Linux":
                 # Try aplay (ALSA) first, fall back to paplay (PulseAudio)
                 ret = os.system(
@@ -127,6 +129,7 @@ class SoundNotifier:
                     )
             elif system == "Windows":
                 import winsound  # type: ignore[import]  # noqa: PLC0415
+
                 winsound.Beep(1000, 1000)
         except Exception as exc:
             logger.debug("SoundNotifier failed (non-fatal): %s", exc)
@@ -162,4 +165,6 @@ def default_notifier(twelve_hour: bool = False) -> CompositeNotifier:
     Args:
         twelve_hour: Passed through to TerminalNotifier for time display format.
     """
-    return CompositeNotifier([TerminalNotifier(twelve_hour=twelve_hour), SoundNotifier()])
+    return CompositeNotifier(
+        [TerminalNotifier(twelve_hour=twelve_hour), SoundNotifier()]
+    )
