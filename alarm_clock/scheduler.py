@@ -135,12 +135,21 @@ def run_scheduler(
     Args:
         storage:       Persistence layer to read/write alarm state.
         notifier:      Called when an alarm is due to fire.
-        poll_interval: Seconds between polls.
+        poll_interval: Seconds between polls. Must be < FIRE_WINDOW_SECONDS.
         clock:         Injectable clock. Defaults to the real system clock.
 
     Raises:
-        Nothing. KeyboardInterrupt is caught and results in a clean exit message.
+        ValueError: If poll_interval >= FIRE_WINDOW_SECONDS, which would cause
+                    alarms to be silently skipped.
     """
+    if poll_interval >= FIRE_WINDOW_SECONDS:
+        raise ValueError(
+            f"poll_interval ({poll_interval}s) must be less than "
+            f"FIRE_WINDOW_SECONDS ({FIRE_WINDOW_SECONDS}s). "
+            f"With equal or larger intervals, alarms firing between polls "
+            f"will be missed entirely."
+        )
+
     if clock is None:
         clock = SystemClock()
 
@@ -150,6 +159,7 @@ def run_scheduler(
         f"Press Ctrl+C to stop.",
         flush=True,
     )
+    _print_next_alarm(storage.load_all())
 
     # Track alarms fired within the current minute to avoid double-firing.
     fired_ids_this_minute: set[str] = set()
@@ -182,6 +192,28 @@ def run_scheduler(
     except KeyboardInterrupt:
         print("\nScheduler stopped.", flush=True)
         logger.info("Scheduler stopped by KeyboardInterrupt.")
+
+
+def _print_next_alarm(alarms: list[Alarm]) -> None:
+    """
+    Print a one-line startup status showing the next alarm to fire.
+
+    Uses datetime.now() directly — this is display-only output, not scheduler
+    logic, so clock injection would add complexity with no correctness benefit.
+    """
+    enabled = [a for a in alarms if a.enabled]
+    if not enabled:
+        return
+    now = datetime.now()
+    nxt = min(enabled, key=lambda a: a.next_fire(now))
+    delta = nxt.next_fire(now) - now
+    minutes = max(0, int(delta.total_seconds() / 60))
+    hours, mins = divmod(minutes, 60)
+    eta = f"~{hours}h {mins}m" if hours > 0 else f"~{mins}m"
+    print(
+        f"Next: [{nxt.id}] {nxt.display_time()} — {nxt.label} (in {eta})",
+        flush=True,
+    )
 
 
 def _on_fired(alarm: Alarm, storage: Storage) -> None:

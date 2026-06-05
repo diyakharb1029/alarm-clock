@@ -34,7 +34,6 @@ Design decisions
 from __future__ import annotations
 
 import logging
-import sys
 from pathlib import Path
 
 import click
@@ -43,7 +42,7 @@ from alarm_clock.logging_config import configure_logging
 from alarm_clock.models import Alarm
 from alarm_clock.notifier import default_notifier
 from alarm_clock.parser import parse_time
-from alarm_clock.scheduler import run_scheduler
+from alarm_clock.scheduler import FIRE_WINDOW_SECONDS, run_scheduler
 from alarm_clock.storage import Storage
 
 logger = logging.getLogger(__name__)
@@ -293,8 +292,9 @@ def snooze(ctx: click.Context, alarm_id: str) -> None:
     "--poll-interval",
     default=30,
     show_default=True,
-    type=click.IntRange(1, 300),
-    help="Seconds between alarm checks.",
+    # Must stay below FIRE_WINDOW_SECONDS to guarantee every alarm is caught.
+    type=click.IntRange(1, FIRE_WINDOW_SECONDS - 1),
+    help=f"Seconds between alarm checks (1–{FIRE_WINDOW_SECONDS - 1}).",
 )
 @click.pass_context
 def run(ctx: click.Context, poll_interval: int) -> None:
@@ -309,11 +309,8 @@ def run(ctx: click.Context, poll_interval: int) -> None:
     enabled = [a for a in alarms if a.enabled]
 
     if not enabled:
-        click.echo(
-            "No enabled alarms. Use `alarm set TIME` to add one, then run again.",
-            err=False,
-        )
-        sys.exit(0)
+        click.echo("No enabled alarms. Use `alarm set TIME` to add one, then run again.")
+        return
 
     twelve_hour: bool = ctx.obj["twelve_hour"]
     notifier = default_notifier(twelve_hour=twelve_hour)
