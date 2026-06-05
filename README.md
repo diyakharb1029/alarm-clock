@@ -1,6 +1,6 @@
 # alarm-clock
 
-A terminal alarm clock. Set, manage, and run alarms from the command line.
+A production-ready terminal alarm clock with persistent storage, recurring alarms, configurable snooze support, and automated testing.
 
 ```
 $ alarm set "7:30 AM" --label "Standup" --recurring
