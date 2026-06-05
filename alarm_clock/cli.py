@@ -31,6 +31,7 @@ Design decisions
    Click maps the command name to the function name by default, so we pass
    name="set" explicitly.
 """
+
 from __future__ import annotations
 
 import logging
@@ -74,7 +75,9 @@ logger = logging.getLogger(__name__)
     help="Display times in 12-hour (2:30 PM) or 24-hour (14:30) format.",
 )
 @click.pass_context
-def main(ctx: click.Context, verbose: bool, data_dir: Path | None, time_format: str) -> None:
+def main(
+    ctx: click.Context, verbose: bool, data_dir: Path | None, time_format: str
+) -> None:
     """
     alarm-clock — A terminal alarm clock.
 
@@ -93,7 +96,7 @@ def main(ctx: click.Context, verbose: bool, data_dir: Path | None, time_format: 
         else Path.home() / ".alarm_clock" / "alarms.json"
     )
     ctx.obj["storage"] = Storage(path=storage_path)
-    ctx.obj["twelve_hour"] = (time_format == "12h")
+    ctx.obj["twelve_hour"] = time_format == "12h"
 
 
 # ── set ───────────────────────────────────────────────────────────────────────
@@ -102,19 +105,22 @@ def main(ctx: click.Context, verbose: bool, data_dir: Path | None, time_format: 
 @main.command(name="set")
 @click.argument("time_str", metavar="TIME")
 @click.option(
-    "--label", "-l",
+    "--label",
+    "-l",
     default="Alarm",
     show_default=True,
     help="Human-readable name for this alarm.",
 )
 @click.option(
-    "--recurring", "-r",
+    "--recurring",
+    "-r",
     is_flag=True,
     default=False,
     help="Repeat the alarm at the same time every day.",
 )
 @click.option(
-    "--snooze-minutes", "-s",
+    "--snooze-minutes",
+    "-s",
     default=5,
     show_default=True,
     type=click.IntRange(1, 60),
@@ -161,9 +167,8 @@ def set_alarm(
 
     twelve_hour: bool = ctx.obj["twelve_hour"]
     recur_str = " (daily)" if recurring else ""
-    click.echo(
-        f"✓ Alarm set: [{alarm.id}] {alarm.display_time(twelve_hour)}{recur_str} — {alarm.label}"
-    )
+    time_str = alarm.display_time(twelve_hour)
+    click.echo(f"✓ Alarm set: [{alarm.id}] {time_str}{recur_str} — {alarm.label}")
     click.echo("  Start the scheduler with: alarm run")
 
 
@@ -184,7 +189,10 @@ def list_alarms(ctx: click.Context) -> None:
     twelve_hour: bool = ctx.obj["twelve_hour"]
     # 12h times ("2:30 PM") are 7 chars; 24h ("14:30") are 5. Use 10 for both.
     time_col = 10
-    header = f"\n{'ID':<10}{'TIME':<{time_col}}{'RECURRING':<12}{'SNOOZE':<9}{'STATUS':<10}LABEL"
+    header = (
+        f"\n{'ID':<10}{'TIME':<{time_col}}"
+        f"{'RECURRING':<12}{'SNOOZE':<9}{'STATUS':<10}LABEL"
+    )
     click.echo(header)
     click.echo("─" * 64)
     for alarm in alarms:
@@ -309,7 +317,9 @@ def run(ctx: click.Context, poll_interval: int) -> None:
     enabled = [a for a in alarms if a.enabled]
 
     if not enabled:
-        click.echo("No enabled alarms. Use `alarm set TIME` to add one, then run again.")
+        click.echo(
+            "No enabled alarms. Use `alarm set TIME` to add one, then run again."
+        )
         return
 
     twelve_hour: bool = ctx.obj["twelve_hour"]

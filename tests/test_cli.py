@@ -17,18 +17,17 @@ No subprocess means no PATH dependency, no install required, and tests run
 in ~1ms each rather than ~100ms. The tradeoff: CliRunner does not test the
 installed entry point, only the Python function. That is acceptable here.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from click.testing import CliRunner
+from click.testing import CliRunner, Result
 
 from alarm_clock.cli import main
-from alarm_clock.models import Alarm
 from alarm_clock.storage import Storage
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -45,7 +44,7 @@ def data_dir(tmp_path: Path) -> Path:
     return d
 
 
-def invoke(runner: CliRunner, data_dir: Path, *args: str) -> "click.testing.Result":
+def invoke(runner: CliRunner, data_dir: Path, *args: str) -> Result:
     """Convenience wrapper that always passes --data-dir."""
     return runner.invoke(main, ["--data-dir", str(data_dir), *args])
 
@@ -54,40 +53,30 @@ def invoke(runner: CliRunner, data_dir: Path, *args: str) -> "click.testing.Resu
 
 
 class TestSetCommand:
-    def test_set_creates_alarm(
-        self, runner: CliRunner, data_dir: Path
-    ) -> None:
+    def test_set_creates_alarm(self, runner: CliRunner, data_dir: Path) -> None:
         result = invoke(runner, data_dir, "set", "14:30")
         assert result.exit_code == 0
         assert "14:30" in result.output
 
-    def test_set_shows_alarm_id(
-        self, runner: CliRunner, data_dir: Path
-    ) -> None:
+    def test_set_shows_alarm_id(self, runner: CliRunner, data_dir: Path) -> None:
         result = invoke(runner, data_dir, "set", "14:30")
         assert result.exit_code == 0
         # Output should contain an 8-char hex id inside brackets
         assert "[" in result.output
 
-    def test_set_with_label(
-        self, runner: CliRunner, data_dir: Path
-    ) -> None:
+    def test_set_with_label(self, runner: CliRunner, data_dir: Path) -> None:
         result = invoke(runner, data_dir, "set", "09:00", "--label", "Standup")
         assert result.exit_code == 0
         assert "Standup" in result.output
 
-    def test_set_with_recurring_flag(
-        self, runner: CliRunner, data_dir: Path
-    ) -> None:
+    def test_set_with_recurring_flag(self, runner: CliRunner, data_dir: Path) -> None:
         result = invoke(runner, data_dir, "set", "07:30", "--recurring")
         assert result.exit_code == 0
         storage = Storage(path=data_dir / "alarms.json")
         alarms = storage.load_all()
         assert alarms[0].recurring is True
 
-    def test_set_persists_to_storage(
-        self, runner: CliRunner, data_dir: Path
-    ) -> None:
+    def test_set_persists_to_storage(self, runner: CliRunner, data_dir: Path) -> None:
         invoke(runner, data_dir, "set", "14:30", "--label", "Persist test")
         storage = Storage(path=data_dir / "alarms.json")
         alarms = storage.load_all()
@@ -109,17 +98,13 @@ class TestSetCommand:
         assert result.exit_code != 0
         assert "99:99" in result.output or "Error" in result.output
 
-    def test_set_12h_am_format(
-        self, runner: CliRunner, data_dir: Path
-    ) -> None:
+    def test_set_12h_am_format(self, runner: CliRunner, data_dir: Path) -> None:
         result = invoke(runner, data_dir, "set", "9:00 AM")
         assert result.exit_code == 0
         storage = Storage(path=data_dir / "alarms.json")
         assert storage.load_all()[0].hour == 9
 
-    def test_set_12h_pm_format(
-        self, runner: CliRunner, data_dir: Path
-    ) -> None:
+    def test_set_12h_pm_format(self, runner: CliRunner, data_dir: Path) -> None:
         result = invoke(runner, data_dir, "set", "2:30 PM")
         assert result.exit_code == 0
         storage = Storage(path=data_dir / "alarms.json")
@@ -160,9 +145,7 @@ class TestListCommand:
 
 
 class TestDeleteCommand:
-    def test_delete_existing_alarm(
-        self, runner: CliRunner, data_dir: Path
-    ) -> None:
+    def test_delete_existing_alarm(self, runner: CliRunner, data_dir: Path) -> None:
         invoke(runner, data_dir, "set", "14:30")
         storage = Storage(path=data_dir / "alarms.json")
         alarm_id = storage.load_all()[0].id
@@ -188,9 +171,7 @@ class TestDeleteCommand:
 
 
 class TestEnableDisableCommands:
-    def _setup_alarm(
-        self, runner: CliRunner, data_dir: Path
-    ) -> str:
+    def _setup_alarm(self, runner: CliRunner, data_dir: Path) -> str:
         invoke(runner, data_dir, "set", "14:30")
         storage = Storage(path=data_dir / "alarms.json")
         return storage.load_all()[0].id
@@ -202,9 +183,7 @@ class TestEnableDisableCommands:
         storage = Storage(path=data_dir / "alarms.json")
         assert storage.get(alarm_id).enabled is False  # type: ignore[union-attr]
 
-    def test_enable_disabled_alarm(
-        self, runner: CliRunner, data_dir: Path
-    ) -> None:
+    def test_enable_disabled_alarm(self, runner: CliRunner, data_dir: Path) -> None:
         alarm_id = self._setup_alarm(runner, data_dir)
         invoke(runner, data_dir, "disable", alarm_id)
         result = invoke(runner, data_dir, "enable", alarm_id)
@@ -231,9 +210,7 @@ class TestEnableDisableCommands:
 
 
 class TestSnoozeCommand:
-    def test_snooze_re_enables_alarm(
-        self, runner: CliRunner, data_dir: Path
-    ) -> None:
+    def test_snooze_re_enables_alarm(self, runner: CliRunner, data_dir: Path) -> None:
         invoke(runner, data_dir, "set", "08:00", "--snooze-minutes", "5")
         storage = Storage(path=data_dir / "alarms.json")
         alarm_id = storage.load_all()[0].id
@@ -283,7 +260,8 @@ class TestSnoozeCommand:
         alarm_id = storage.load_all()[0].id
 
         result = runner.invoke(
-            main, ["--data-dir", str(data_dir), "--time-format", "12h", "snooze", alarm_id]
+            main,
+            ["--data-dir", str(data_dir), "--time-format", "12h", "snooze", alarm_id],
         )
         assert result.exit_code == 0
         assert "AM" in result.output or "PM" in result.output

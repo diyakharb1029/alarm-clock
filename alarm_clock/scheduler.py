@@ -38,6 +38,7 @@ Design decisions
    confuse users who want to re-enable it. Disabling preserves the record while
    making it clear the alarm has been consumed.
 """
+
 from __future__ import annotations
 
 import logging
@@ -93,7 +94,8 @@ def should_fire(alarm: Alarm, now: datetime) -> bool:
     An alarm fires when:
     - It is enabled.
     - It is in the same hour as now.
-    - Its minute falls within [now_minute_seconds, now_minute_seconds + FIRE_WINDOW_SECONDS).
+    - Its minute falls within
+      [now_minute_seconds, now_minute_seconds + FIRE_WINDOW_SECONDS).
 
     Args:
         alarm: The alarm to check.
@@ -229,6 +231,4 @@ def _on_fired(alarm: Alarm, storage: Storage) -> None:
     else:
         alarm.enabled = False
         storage.update(alarm)
-        logger.debug(
-            "Disabled one-time alarm %s after firing.", alarm.id
-        )
+        logger.debug("Disabled one-time alarm %s after firing.", alarm.id)

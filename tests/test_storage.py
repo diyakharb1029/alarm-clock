@@ -10,16 +10,15 @@ What we are testing — behaviour:
 - A corrupt JSON file causes load_all to return [] and not raise.
 - Alarm state survives a full round-trip through the file.
 """
+
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
 from alarm_clock.models import Alarm
 from alarm_clock.storage import Storage
-
 
 # ── Fixture ───────────────────────────────────────────────────────────────────
 
@@ -48,16 +47,12 @@ class TestLoadAll:
     ) -> None:
         assert storage.load_all() == []
 
-    def test_returns_empty_list_for_corrupt_json(
-        self, storage: Storage
-    ) -> None:
+    def test_returns_empty_list_for_corrupt_json(self, storage: Storage) -> None:
         storage.path.write_text("this is not json", encoding="utf-8")
         result = storage.load_all()
         assert result == []
 
-    def test_returns_empty_list_for_empty_json_array(
-        self, storage: Storage
-    ) -> None:
+    def test_returns_empty_list_for_empty_json_array(self, storage: Storage) -> None:
         storage.path.write_text("[]", encoding="utf-8")
         assert storage.load_all() == []
 
@@ -88,9 +83,7 @@ class TestAdd:
         result = storage.load_all()
         assert len(result) == 2
 
-    def test_add_is_persisted_to_disk(
-        self, storage: Storage, alarm_a: Alarm
-    ) -> None:
+    def test_add_is_persisted_to_disk(self, storage: Storage, alarm_a: Alarm) -> None:
         storage.add(alarm_a)
         # Create a fresh Storage pointing to the same file to simulate restart
         fresh = Storage(path=storage.path)
@@ -116,9 +109,7 @@ class TestRemove:
         storage.remove(alarm_a.id)
         assert storage.load_all() == []
 
-    def test_remove_nonexistent_id_returns_false(
-        self, storage: Storage
-    ) -> None:
+    def test_remove_nonexistent_id_returns_false(self, storage: Storage) -> None:
         assert storage.remove("doesnotexist") is False
 
     def test_remove_only_removes_target(
@@ -136,9 +127,7 @@ class TestRemove:
 
 
 class TestGet:
-    def test_get_existing_returns_alarm(
-        self, storage: Storage, alarm_a: Alarm
-    ) -> None:
+    def test_get_existing_returns_alarm(self, storage: Storage, alarm_a: Alarm) -> None:
         storage.add(alarm_a)
         result = storage.get(alarm_a.id)
         assert result is not None
@@ -159,9 +148,7 @@ class TestUpdate:
         alarm_a.enabled = False
         assert storage.update(alarm_a) is True
 
-    def test_update_persists_change(
-        self, storage: Storage, alarm_a: Alarm
-    ) -> None:
+    def test_update_persists_change(self, storage: Storage, alarm_a: Alarm) -> None:
         storage.add(alarm_a)
         alarm_a.enabled = False
         storage.update(alarm_a)
@@ -175,9 +162,7 @@ class TestUpdate:
         # alarm_a was never added
         assert storage.update(alarm_a) is False
 
-    def test_update_does_not_duplicate(
-        self, storage: Storage, alarm_a: Alarm
-    ) -> None:
+    def test_update_does_not_duplicate(self, storage: Storage, alarm_a: Alarm) -> None:
         storage.add(alarm_a)
         alarm_a.label = "Updated label"
         storage.update(alarm_a)

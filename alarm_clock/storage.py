@@ -26,8 +26,10 @@ Design decisions
    An explicit error message is printed only if the file exists but is unreadable,
    so the user knows something is wrong.
 """
+
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
@@ -130,10 +132,8 @@ class Storage:
             logger.debug("Saved %d alarm(s) to %s", len(alarms), self._path)
         except OSError:
             # Clean up temp file if rename failed
-            try:
+            with contextlib.suppress(Exception):
                 tmp_path.unlink(missing_ok=True)
-            except Exception:
-                pass
             raise
 
     def add(self, alarm: Alarm) -> None:
