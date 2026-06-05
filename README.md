@@ -13,8 +13,9 @@ ID        TIME      RECURRING   SNOOZE   STATUS    LABEL
 a3f2b1c4  07:30     daily       5m       enabled   Standup
 
 $ alarm run
-Alarm scheduler running (polling every 30s). Press Ctrl+C to stop.
+Alarm scheduler running (polling every 30s). 
 Next: [a3f2b1c4] 07:30 — Standup (in ~3h 12m)
+Press Ctrl+C to stop.
 
 ====================================================
   ⏰  ALARM: Standup
