@@ -14,6 +14,7 @@ a3f2b1c4  07:30     daily       5m       enabled   Standup
 
 $ alarm run
 Alarm scheduler running (polling every 30s). Press Ctrl+C to stop.
+Next: [a3f2b1c4] 07:30 — Standup (in ~3h 12m)
 
 ====================================================
   ⏰  ALARM: Standup
@@ -134,8 +135,8 @@ delay the next occurrence.
 
 ### `alarm run [--poll-interval N]`
 
-Start the foreground scheduler. Checks every N seconds (default 30). Press
-Ctrl+C to stop.
+Start the foreground scheduler. Checks every N seconds (1–59, default 30).
+Displays the next scheduled alarm on startup. Press Ctrl+C to stop.
 
 ---
 
@@ -165,7 +166,7 @@ make test-fast   # run without coverage (faster feedback)
 make check       # lint + types + tests
 ```
 
-The test suite has five modules:
+The test suite has six modules:
 
 - **`test_models.py`** — validation, `next_fire`, `snooze`, serialization, `__str__`
 - **`test_parser.py`** — all accepted formats, all rejection cases, whitespace handling, error message quality
