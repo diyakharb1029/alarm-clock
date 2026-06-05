@@ -260,22 +260,4 @@ The key question is: where does the preference belong? Options:
 
 ---
 
-## What I would do with more time
-
-1. **Daemon mode** (`alarm run --background`): write a PID file, redirect
-   output to the log file, and detach from the terminal. The hard part is
-   platform-specific (launchd on macOS, systemd on Linux, Task Scheduler on
-   Windows). Deliberately out of scope for this submission.
-
-2. **OS native notifications**: use `plyer` or platform APIs to show a desktop
-   notification bubble in addition to the terminal banner. Low-complexity win
-   for usability.
-
-3. **`alarm next` command**: show the next alarm that will fire and in how many
-   minutes. Quick to implement, high utility.
-
-4. **Timezone support**: store alarms in UTC with a user-configured local
-   timezone. DST transitions make this non-trivial; skipped to keep scope clean.
-
-5. **Property-based tests for the parser**: use `hypothesis` to fuzz
-   `parse_time()` and confirm it never raises anything other than `ValueError`.
+<!-- Future work tracked in README.md → "What I'd do with more time" -->
