@@ -256,3 +256,32 @@ class TestRunScheduler:
         run_scheduler(storage=storage, notifier=notifier, clock=clock)
 
         assert notifier.fired == []
+
+    def test_poll_interval_equal_to_fire_window_raises(
+        self, tmp_path: Path
+    ) -> None:
+        """
+        poll_interval == FIRE_WINDOW_SECONDS means alarms firing between polls
+        fall outside the window on the next poll and are silently skipped.
+        run_scheduler must reject this at startup, not silently misbehave.
+        """
+        storage = Storage(path=tmp_path / "alarms.json")
+        notifier = RecordingNotifier()
+        with pytest.raises(ValueError, match="poll_interval"):
+            run_scheduler(
+                storage=storage,
+                notifier=notifier,
+                poll_interval=FIRE_WINDOW_SECONDS,
+            )
+
+    def test_poll_interval_above_fire_window_raises(
+        self, tmp_path: Path
+    ) -> None:
+        storage = Storage(path=tmp_path / "alarms.json")
+        notifier = RecordingNotifier()
+        with pytest.raises(ValueError, match="poll_interval"):
+            run_scheduler(
+                storage=storage,
+                notifier=notifier,
+                poll_interval=FIRE_WINDOW_SECONDS + 30,
+            )
